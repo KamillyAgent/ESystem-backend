@@ -13,9 +13,30 @@ export interface AuthUser {
   picture?: string;
 }
 
+// Returns true when the Auth0 env vars are configured. When false, all
+// auth helpers degrade to "signed out" so the site stays browseable.
+export function auth0Configured(): boolean {
+  return !!(
+    process.env.AUTH0_DOMAIN &&
+    process.env.AUTH0_CLIENT_ID &&
+    process.env.AUTH0_CLIENT_SECRET &&
+    process.env.AUTH0_SECRET
+  );
+}
+
 // Get the current user or null. Use in pages/components.
+// If Auth0 isn't configured, always returns null instead of throwing.
 export async function getAuthUser(): Promise<AuthUser | null> {
-  const session = await getSession();
+  if (!auth0Configured()) return null;
+  let session: Session | null | undefined;
+  try {
+    session = await getSession();
+  } catch (err) {
+    // Auth0 SDK throws when env vars are partially set or token is corrupt.
+    // Treat as signed-out so the rest of the page still renders.
+    console.error('[ESystem auth0] getSession failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
   if (!session?.user) return null;
   return {
     sub: session.user.sub,
@@ -27,7 +48,12 @@ export async function getAuthUser(): Promise<AuthUser | null> {
 
 // Require a signed-in user. If none, redirect to Auth0 login.
 // Returns the user. Optionally takes a `returnTo` path to come back to.
+// If Auth0 is unconfigured, redirects to /auth/setup so the operator sees
+// the missing-env message instead of an infinite loop on /api/auth/login.
 export async function requireUser(returnTo?: string): Promise<AuthUser> {
+  if (!auth0Configured()) {
+    redirect('/auth/setup');
+  }
   const user = await getAuthUser();
   if (!user) {
     // The Auth0 SDK will read AUTH0_BASE_URL to build the redirect,

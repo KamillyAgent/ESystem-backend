@@ -13,7 +13,8 @@ import { getSession } from '@auth0/nextjs-auth0';
 export const runtime = 'nodejs';
 
 export async function middleware(request: NextRequest) {
-  // Fast-path: skip proxy work if env vars are missing.
+  // Fast-path: skip proxy work if env vars are missing — the page itself
+  // will surface a friendly "auth not configured" message via /auth/setup.
   if (!process.env.AUTH0_SECRET) {
     return NextResponse.next({ request });
   }
