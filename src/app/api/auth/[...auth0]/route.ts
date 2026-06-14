@@ -46,11 +46,11 @@ export const GET = handleAuth({
           error: 'auth0_misconfigured',
           message: error.message,
           hint:
-            'AUTH0_DOMAIN must be the bare hostname (e.g. "your-tenant.us.auth0.com") with NO https:// prefix. AUTH0_BASE_URL must be the full site URL (e.g. "https://esystem.masud.app").',
+            'In SDK v3, the env var is AUTH0_ISSUER_BASE_URL (full URL like https://your-tenant.us.auth0.com), NOT the v2 AUTH0_DOMAIN. AUTH0_BASE_URL must be the site URL (e.g. "https://esystem.masud.app").',
           current_values: {
-            AUTH0_DOMAIN: process.env.AUTH0_DOMAIN
-              ? `${process.env.AUTH0_DOMAIN.slice(0, 12)}${process.env.AUTH0_DOMAIN.length > 12 ? '...' : ''}`
-              : '(empty)',
+            AUTH0_ISSUER_BASE_URL: process.env.AUTH0_ISSUER_BASE_URL
+              ? `${process.env.AUTH0_ISSUER_BASE_URL.slice(0, 24)}...`
+              : '(empty — set this to the full Auth0 tenant URL)',
             AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID
               ? `${process.env.AUTH0_CLIENT_ID.slice(0, 6)}...`
               : '(empty)',

@@ -43,7 +43,8 @@ export async function GET() {
     ADMIN_EMAIL: !!process.env.ADMIN_EMAIL,
     CRON_SECRET: !!process.env.CRON_SECRET,
     NEXT_PUBLIC_SITE_URL: !!process.env.NEXT_PUBLIC_SITE_URL,
-    AUTH0_DOMAIN: !!process.env.AUTH0_DOMAIN,
+    // SDK v3 uses AUTH0_ISSUER_BASE_URL (full URL), not AUTH0_DOMAIN (legacy v2 name)
+    AUTH0_ISSUER_BASE_URL: !!process.env.AUTH0_ISSUER_BASE_URL,
     AUTH0_CLIENT_ID: !!process.env.AUTH0_CLIENT_ID,
     AUTH0_CLIENT_SECRET: !!process.env.AUTH0_CLIENT_SECRET,
     AUTH0_SECRET: !!process.env.AUTH0_SECRET,
@@ -52,9 +53,9 @@ export async function GET() {
 
   // Value previews + format validation
   const envValidation = {
-    AUTH0_DOMAIN: {
-      value_preview: preview('AUTH0_DOMAIN'),
-      looks_like_auth0_domain: isLikelyValidDomain(process.env.AUTH0_DOMAIN),
+    AUTH0_ISSUER_BASE_URL: {
+      value_preview: preview('AUTH0_ISSUER_BASE_URL'),
+      looks_like_https_url: isLikelyValidUrl(process.env.AUTH0_ISSUER_BASE_URL),
     },
     AUTH0_BASE_URL: {
       value_preview: preview('AUTH0_BASE_URL'),
@@ -92,7 +93,7 @@ export async function GET() {
   const allPresent = Object.values(envPresent).every(Boolean);
   const anyMissing = Object.values(tableStatus).some((s) => s !== 'ok');
   const auth0Valid =
-    envValidation.AUTH0_DOMAIN.looks_like_auth0_domain &&
+    envValidation.AUTH0_ISSUER_BASE_URL.looks_like_https_url &&
     envValidation.AUTH0_BASE_URL.looks_like_https_url;
 
   // Pick the most actionable hint
@@ -100,11 +101,9 @@ export async function GET() {
   if (!allPresent) {
     hint = 'Some env vars are missing in Vercel → Project → Settings → Environment Variables.';
   } else if (!auth0Valid) {
-    if (!envValidation.AUTH0_DOMAIN.looks_like_auth0_domain) {
+    if (!envValidation.AUTH0_ISSUER_BASE_URL.looks_like_https_url) {
       hint =
-        'AUTH0_DOMAIN does not look like a real Auth0 tenant hostname. ' +
-        'Expected format: your-tenant.us.auth0.com (no https://). ' +
-        'Go to https://manage.auth0.com → Applications → your app → Settings → "Domain" field.';
+        'AUTH0_ISSUER_BASE_URL (SDK v3 name, was AUTH0_DOMAIN in v2) must be a full https URL like https://your-tenant.us.auth0.com. Set it in Vercel → Settings → Environment Variables.';
     } else if (!envValidation.AUTH0_BASE_URL.looks_like_https_url) {
       hint =
         'AUTH0_BASE_URL must be a full https URL like https://esystem.masud.app ' +
