@@ -1,0 +1,10 @@
+# https://esystem.masud.app
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /auth/setup
+
+# Sitemap (not generated yet)
+# Sitemap: https://esystem.masud.app/sitemap.xml
