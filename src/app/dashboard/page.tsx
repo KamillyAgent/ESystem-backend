@@ -9,8 +9,14 @@ export const dynamic = 'force-dynamic';
 export default async function DashboardPage() {
   const user = await requireUser('/dashboard');
 
-  // Ensure the user has a profile row (creates on first visit after sign-in)
-  await ensureProfile(user);
+  // Ensure the user has a profile row (creates on first visit after sign-in).
+  // Wrap in try/catch so a Supabase hiccup doesn't take down the whole page.
+  try {
+    await ensureProfile(user);
+  } catch (err) {
+    console.error('[ESystem dashboard] ensureProfile failed:', err);
+    // Page still renders — the profile is only needed for display, not auth.
+  }
 
   const admin = createAdminClient();
   const userId = user.sub;
