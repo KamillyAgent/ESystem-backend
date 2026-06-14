@@ -15,16 +15,11 @@ export async function GET() {
     ADMIN_EMAIL: !!process.env.ADMIN_EMAIL,
     CRON_SECRET: !!process.env.CRON_SECRET,
     NEXT_PUBLIC_SITE_URL: !!process.env.NEXT_PUBLIC_SITE_URL,
-    // Auth0
     AUTH0_DOMAIN: !!process.env.AUTH0_DOMAIN,
     AUTH0_CLIENT_ID: !!process.env.AUTH0_CLIENT_ID,
     AUTH0_CLIENT_SECRET: !!process.env.AUTH0_CLIENT_SECRET,
     AUTH0_SECRET: !!process.env.AUTH0_SECRET,
     AUTH0_BASE_URL: !!process.env.AUTH0_BASE_URL,
-    // Common wrong-prefix values the integration might create
-    AUTHENTICATION_DOMAIN: !!process.env.AUTHENTICATION_DOMAIN,
-    AUTHENTICATION_CLIENT_ID: !!process.env.AUTHENTICATION_CLIENT_ID,
-    AUTHENTICATION_CLIENT_SECRET: !!process.env.AUTHENTICATION_CLIENT_SECRET,
   };
 
   // Try connecting to Supabase and check which tables are reachable.
