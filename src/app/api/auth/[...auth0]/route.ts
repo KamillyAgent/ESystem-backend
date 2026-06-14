@@ -9,4 +9,7 @@
 
 import { handleAuth } from '@auth0/nextjs-auth0';
 
+// Force Node runtime (Auth0 SDK uses openid-client which needs Node APIs)
+export const runtime = 'nodejs';
+
 export const GET = handleAuth();

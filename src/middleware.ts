@@ -8,7 +8,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 
-export async function proxy(request: NextRequest) {
+// Auth0 SDK v3 uses Node-only APIs (process.version, process.stdout) via
+// openid-client. Force the Node.js runtime instead of the default Edge.
+export const runtime = 'nodejs';
+
+export async function middleware(request: NextRequest) {
   // Fast-path: skip proxy work if env vars are missing.
   if (!process.env.AUTH0_SECRET) {
     return NextResponse.next({ request });
