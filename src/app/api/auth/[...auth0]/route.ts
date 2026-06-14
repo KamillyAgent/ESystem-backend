@@ -27,15 +27,40 @@ function setupNotConfigured() {
 }
 
 // `onError` catches the SDK's "issuerBaseURL is required" / "clientID is
-// required" / etc. thrown when the env vars are missing, and returns a
-// friendly 503 instead of a 500 stack trace.
+// required" / etc. thrown when the env vars are missing or malformed, and
+// returns a friendly 503 with the actual error message so we can debug
+// the env-var values without needing Vercel runtime logs.
 export const GET = handleAuth({
   onError(_req: NextRequest, error: Error) {
-    if (/issuerBaseURL|clientID|clientSecret|secret is required/i.test(error.message)) {
-      console.error('[ESystem auth0] Missing config:', error.message);
-      return setupNotConfigured();
-    }
     console.error('[ESystem auth0] handleAuth error:', error);
+    const isConfig =
+      /issuerBaseURL|clientID|clientSecret|secret is required|discovery|jwks|authorization_endpoint/i.test(
+        error.message
+      );
+    if (isConfig) {
+      // For Auth0 v3, AUTH0_DOMAIN must be JUST the hostname (no https://).
+      // If the user pasted the full URL, the SDK tries to fetch
+      // https://https://.../ which fails with the errors above.
+      return NextResponse.json(
+        {
+          error: 'auth0_misconfigured',
+          message: error.message,
+          hint:
+            'AUTH0_DOMAIN must be the bare hostname (e.g. "your-tenant.us.auth0.com") with NO https:// prefix. AUTH0_BASE_URL must be the full site URL (e.g. "https://esystem.masud.app").',
+          current_values: {
+            AUTH0_DOMAIN: process.env.AUTH0_DOMAIN
+              ? `${process.env.AUTH0_DOMAIN.slice(0, 12)}${process.env.AUTH0_DOMAIN.length > 12 ? '...' : ''}`
+              : '(empty)',
+            AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID
+              ? `${process.env.AUTH0_CLIENT_ID.slice(0, 6)}...`
+              : '(empty)',
+            AUTH0_BASE_URL: process.env.AUTH0_BASE_URL || '(empty)',
+          },
+          check: '/api/v1/test',
+        },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { error: 'auth_handler_error', message: error.message },
       { status: 500 }
