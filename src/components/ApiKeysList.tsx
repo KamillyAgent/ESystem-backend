@@ -23,6 +23,11 @@ export function ApiKeysList({
 }) {
   const router = useRouter();
   const [keys, setKeys] = useState<ApiKey[]>(initialKeys);
+  // Track active count locally so the "Generate (X/6)" label updates instantly
+  // without waiting for router.refresh() to round-trip the server.
+  const [localActiveCount, setLocalActiveCount] = useState(
+    initialKeys.filter((k) => !k.revoked_at).length
+  );
   const [newLabel, setNewLabel] = useState("");
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState<string | null>(null);
@@ -54,6 +59,8 @@ export function ApiKeysList({
     setNewLabel("");
     setCreating(false);
     router.refresh();
+    // Optimistically bump the count so the button updates before refresh lands
+    setLocalActiveCount((c) => c + 1);
   }
 
   async function revoke(id: string) {
@@ -61,6 +68,7 @@ export function ApiKeysList({
     const res = await fetch(`/api/v1/keys/${id}`, { method: "DELETE" });
     if (res.ok) {
       setKeys((prev) => prev.map((k) => (k.id === id ? { ...k, revoked_at: new Date().toISOString() } : k)));
+      setLocalActiveCount((c) => Math.max(0, c - 1));
       router.refresh();
     }
   }
@@ -92,10 +100,10 @@ export function ApiKeysList({
         />
         <button
           onClick={create}
-          disabled={creating || activeCount >= 6}
+          disabled={creating || localActiveCount >= 6}
           className="px-4 py-2 rounded bg-red-500 hover:bg-red-600 disabled:opacity-50 text-sm font-medium"
         >
-          {creating ? "..." : `Generate (${activeCount}/6)`}
+          {creating ? "..." : `Generate (${localActiveCount}/6)`}
         </button>
       </div>
       {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
