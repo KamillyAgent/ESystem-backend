@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -25,6 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <footer className="border-t border-zinc-800 py-6 text-center text-sm text-zinc-500">
           ESystem · <a href="/how-it-works" className="hover:text-zinc-300">How it works</a> · <a href="/privacy" className="hover:text-zinc-300">Privacy</a>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
