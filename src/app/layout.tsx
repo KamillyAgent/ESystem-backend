@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { getAuthUser } from "@/lib/auth0";
@@ -24,6 +25,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <footer className="border-t border-zinc-800 py-6 text-center text-sm text-zinc-500">
           ESystem · <a href="/how-it-works" className="hover:text-zinc-300">How it works</a> · <a href="/privacy" className="hover:text-zinc-300">Privacy</a>
         </footer>
+        {/* Vercel Web Analytics — fires a pageview on every navigation. */}
+        <Analytics />
       </body>
     </html>
   );
