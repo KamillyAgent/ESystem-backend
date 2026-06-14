@@ -1,0 +1,31 @@
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { Nav } from "@/components/Nav";
+import { createClient } from "@/lib/supabase/server";
+
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "ESystem — NSFW Shield",
+  description: "Block NSFW, adult, and 18+ pages and domains. Cross-browser content blocker.",
+};
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAdmin = !!user && user.email === process.env.ADMIN_EMAIL;
+
+  return (
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100">
+        <Nav user={user ? { email: user.email!, isAdmin } : null} />
+        <main className="flex-1">{children}</main>
+        <footer className="border-t border-zinc-800 py-6 text-center text-sm text-zinc-500">
+          ESystem · <a href="/how-it-works" className="hover:text-zinc-300">How it works</a> · <a href="/privacy" className="hover:text-zinc-300">Privacy</a>
+        </footer>
+      </body>
+    </html>
+  );
+}
