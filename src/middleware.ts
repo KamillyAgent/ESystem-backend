@@ -6,7 +6,7 @@
 //   want the proxy to take down the whole site).
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@auth0/nextjs-auth0';
+import { getAuthUser } from '@/lib/auth0';
 
 // Auth0 SDK v3 uses Node-only APIs (process.version, process.stdout) via
 // openid-client. Force the Node.js runtime instead of the default Edge.
@@ -24,14 +24,10 @@ export async function middleware(request: NextRequest) {
   const isProtected = path.startsWith('/admin') || path.startsWith('/dashboard');
 
   if (isProtected) {
-    let session = null;
-    try {
-      session = await getSession();
-    } catch (err) {
-      console.error('[ESystem proxy] getSession failed:', err);
-      // fall through, let the page handle it
-    }
-    if (!session?.user) {
+    // getAuthUser() already wraps the SDK's getSession() in try/catch and
+    // returns null if config is missing or the session is invalid.
+    const user = await getAuthUser();
+    if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/api/auth/login';
       url.searchParams.set('returnTo', path);
