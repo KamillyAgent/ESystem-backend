@@ -1,13 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthUser } from "@/lib/api-session";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  const auth = await requireAuthUser();
+  if (auth instanceof NextResponse) return auth;
 
   const { word } = await req.json();
   if (typeof word !== 'string' || !word.trim() || word.length > 64) {
@@ -18,7 +17,7 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from('custom_words')
-    .upsert({ user_id: user.id, word: w }, { onConflict: 'user_id,word' })
+    .upsert({ user_id: auth.sub, word: w }, { onConflict: 'user_id,word' })
     .select()
     .single();
 

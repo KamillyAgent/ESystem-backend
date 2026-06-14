@@ -1,8 +1,6 @@
-// Service-role Supabase client. BYPASSES RLS. Server-only.
-// Use for: API key auth (reading the api_keys table), admin operations,
-// building the sync payload (joining built_in + per-user data), refreshing
-// the built-in blocklist from external URLs.
-// Never import this in a client component or expose it to the browser.
+// Supabase admin (service-role) client — bypasses RLS. Server-only.
+// Same as before; kept for compatibility. The auth-less user client is
+// no longer needed because we use Auth0 for authentication.
 
 import { createClient } from '@supabase/supabase-js';
 

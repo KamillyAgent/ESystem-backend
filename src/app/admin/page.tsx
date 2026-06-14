@@ -1,14 +1,19 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireUser, ensureProfile, isAdmin } from "@/lib/auth0";
 import { SourcesList } from "@/components/SourcesList";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
+  const user = await requireUser('/admin');
+  await ensureProfile(user);
+
   const admin = createAdminClient();
   const [sourcesRes, logRes] = await Promise.all([
     admin.from("blocklist_sources").select("*").order("created_at", { ascending: false }),
     admin.from("refresh_log").select("*").order("started_at", { ascending: false }).limit(20),
   ]);
 
-  // Count built-in entries
   const { count: builtInCount } = await admin
     .from("built_in_entries")
     .select("id", { count: "exact", head: true })

@@ -1,19 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 interface NavUser { email: string; isAdmin: boolean; }
 
 export function Nav({ user }: { user: NavUser | null }) {
   const router = useRouter();
-  const supabase = createClient();
 
   async function signOut() {
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    // Auth0 handles logout at /api/auth/logout
+    window.location.href = '/api/auth/logout';
   }
 
   return (
@@ -37,7 +34,7 @@ export function Nav({ user }: { user: NavUser | null }) {
               </button>
             </>
           ) : (
-            <Link href="/login" className="px-3 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white">
+            <Link href="/api/auth/login" className="px-3 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white">
               Sign in
             </Link>
           )}

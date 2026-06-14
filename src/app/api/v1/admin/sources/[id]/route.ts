@@ -1,14 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getSession } from "@auth0/nextjs-auth0";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = 'force-dynamic';
 
 async function requireAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== process.env.ADMIN_EMAIL) return null;
-  return user;
+  const session = await getSession();
+  if (!session?.user || session.user.email !== process.env.ADMIN_EMAIL) return null;
+  return session.user;
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

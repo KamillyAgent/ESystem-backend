@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/auth0";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (user) redirect("/dashboard");
 
   return (
@@ -23,8 +22,8 @@ export default async function Home() {
           with no data sent anywhere until you sign in and connect your own backend.
         </p>
         <div className="mt-10 flex items-center justify-center gap-3">
-          <Link href="/login" className="px-5 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium">
-            Sign in with Google
+          <Link href="/api/auth/login" className="px-5 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium">
+            Sign in
           </Link>
           <Link href="/how-it-works" className="px-5 py-2.5 rounded-lg border border-zinc-800 hover:border-zinc-700">
             How it works

@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireUser, isAdmin, ensureProfile } from "@/lib/auth0";
 import { redirect } from "next/navigation";
 import { AddSourceForm } from "@/components/AddSourceForm";
 
 export default async function NewSourcePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
+  const user = await requireUser('/admin/sources/new');
+  await ensureProfile(user);
+  if (!isAdmin(user, process.env.ADMIN_EMAIL)) redirect("/dashboard");
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">

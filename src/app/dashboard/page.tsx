@@ -1,7 +1,5 @@
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser, ensureProfile, isAdmin } from "@/lib/auth0";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { redirect } from "next/navigation";
 import { ApiKeysList } from "@/components/ApiKeysList";
 import { CustomWordsList } from "@/components/CustomWordsList";
 import { BlocklistTable } from "@/components/BlocklistTable";
@@ -9,18 +7,19 @@ import { BlocklistTable } from "@/components/BlocklistTable";
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/dashboard");
+  const user = await requireUser('/dashboard');
+
+  // Ensure the user has a profile row (creates on first visit after sign-in)
+  await ensureProfile(user);
 
   const admin = createAdminClient();
+  const userId = user.sub;
 
   // Use allSettled so one failing query doesn't kill the whole page.
-  // A user with a corrupted blocklist can still see their API keys + custom words.
   const [keysSettled, wordsSettled, listSettled] = await Promise.allSettled([
-    admin.from("api_keys").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-    admin.from("custom_words").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-    admin.from("blocklist_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
+    admin.from("api_keys").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    admin.from("custom_words").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    admin.from("blocklist_entries").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(200),
   ]);
 
   const keys = keysSettled.status === 'fulfilled' ? (keysSettled.value.data ?? []) : [];
@@ -54,7 +53,7 @@ export default async function DashboardPage() {
           <p className="mt-1 text-xs text-zinc-500">Use these in the ESystem extension. Up to 6 active at a time.</p>
           <div className="mt-4">
             <ApiKeysList
-              userId={user.id}
+              userId={userId}
               initialKeys={keys}
               activeCount={keys.filter((k) => !k.revoked_at).length}
             />
@@ -65,7 +64,7 @@ export default async function DashboardPage() {
           <h2 className="text-lg font-semibold">Custom detection words</h2>
           <p className="mt-1 text-xs text-zinc-500">Add words to detect in page text. Merged with the built-in list.</p>
           <div className="mt-4">
-            <CustomWordsList userId={user.id} initialWords={words} />
+            <CustomWordsList userId={userId} initialWords={words} />
           </div>
         </section>
       </div>
@@ -77,7 +76,7 @@ export default async function DashboardPage() {
         </div>
         <p className="mt-1 text-xs text-zinc-500">Detected by the extension or added manually.</p>
         <div className="mt-4">
-          <BlocklistTable userId={user.id} initialEntries={list} />
+          <BlocklistTable userId={userId} initialEntries={list} />
         </div>
       </section>
     </div>
